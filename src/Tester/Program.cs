@@ -13,7 +13,9 @@ namespace Tester
                 AppId = File.ReadAllText(@"..\..\..\..\appId.txt")
             };
             string nickname = "t3mp0";
-            Console.WriteLine(requester.GetAccountIdByNickname(nickname));
+            int userId = requester.GetAccountIdByNickname(nickname);
+
+            Console.WriteLine(requester.GetTankIdByName("Maus"));
         }
     }
 }
