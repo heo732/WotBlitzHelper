@@ -7,12 +7,7 @@ namespace MasteryMarks
 {
     public class MasteryMarksLoader : Requester
     {
-        private string Nickname { get; set; }
-
-        public MasteryMarksLoader(string nickname)
-        {
-            Nickname = nickname;
-        }
+        public string Nickname { get; set; }
 
         public List<TankMasteryMarks> GetMasteryMarks()
         {

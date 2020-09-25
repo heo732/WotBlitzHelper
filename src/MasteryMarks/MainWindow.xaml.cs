@@ -7,8 +7,7 @@ namespace MasteryMarks
         public MainWindow()
         {
             InitializeComponent();
-
-            var a = new MasteryMarksLoader("t3mp0").GetMasteryMarks();
+            DataContext = new MainWindowViewModel();
         }
     }
 }

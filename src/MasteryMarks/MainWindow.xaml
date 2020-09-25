@@ -5,8 +5,59 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MasteryMarks"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MasteryMarks"
+        WindowStartupLocation="CenterScreen"
+        Height="450"
+        Width="800">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Menu>
+            <MenuItem Header="Settings" Command="{Binding SettingsCommand}"/>
+        </Menu>
+        <Button Grid.Row="3" Width="100" HorizontalAlignment="Right" Margin="10,5,10,5" Content="Reload" Command="{Binding ReloadCommand}"/>
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ListView ItemsSource="{Binding Items, Mode=OneWay}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+
+                <ListView.Template>
+                    <ControlTemplate>
+                        <ItemsPresenter/>
+                    </ControlTemplate>
+                </ListView.Template>
+
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid HorizontalAlignment="Stretch">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="{Binding TankName}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding MarksGettingsProbability}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding MarksEventPoints}"/>
+                            <TextBlock Grid.Column="3" Text="{Binding NumberOfBattles}"/>
+                            <TextBlock Grid.Column="4" Text="{Binding NumberOfMasteryMarks}"/>
+                            <TextBlock Grid.Column="5" Text="{Binding NumberOfMastery1Marks}"/>
+                            <TextBlock Grid.Column="6" Text="{Binding NumberOfMastery2Marks}"/>
+                            <TextBlock Grid.Column="7" Text="{Binding NumberOfMastery3Marks}"/>
+
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+            </ListView>
+        </ScrollViewer>
     </Grid>
 </Window>
