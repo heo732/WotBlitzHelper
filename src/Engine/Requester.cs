@@ -1,12 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Engine
 {
     public class Requester
     {
-        public string AppId { get; set; }
+        public string AppId { get; set; } = File.ReadAllText(@"..\..\..\..\appId.txt");
 
         public Region Region { get; set; } = Region.Ru;
 
