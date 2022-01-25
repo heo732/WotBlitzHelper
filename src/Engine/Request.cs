@@ -1,27 +1,23 @@
-﻿using System.IO;
-using System.Net;
+﻿using System.Net;
 
-namespace Engine
+namespace Engine;
+
+public class Request
 {
-    public class Request
+    public string Uri { get; private set; }
+
+    public Request(string uri)
     {
-        public string Uri { get; private set; }
+        Uri = uri ?? string.Empty;
+    }
 
-        public Request(string uri)
-        {
-            Uri = uri ?? "";
-        }
-
-        public string GetResponseContent()
-        {
-            var request = WebRequest.Create(Uri);
-            request.Method = "GET";
-            using (WebResponse response = request.GetResponse())
-            using (Stream stream = response.GetResponseStream())
-            using (var reader = new StreamReader(stream))
-            {
-                return reader.ReadToEnd();
-            }
-        }
+    public string GetResponseContent()
+    {
+        var request = WebRequest.Create(Uri);
+        request.Method = "GET";
+        using var response = request.GetResponse();
+        using var stream = response.GetResponseStream();
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
     }
 }
