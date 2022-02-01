@@ -1,6 +1,6 @@
 ﻿namespace Engine;
 
-public class RequestBuilder
+internal class RequestBuilder
 {
     public string AppId { get; private set; }
     public string RequestSpecialPart { get; private set; }
@@ -8,7 +8,7 @@ public class RequestBuilder
     public Region Region { get; private set; }
     public Dictionary<string, string> Properties { get; private set; }
 
-    public RequestBuilder(string appId, string requestSpecificPart, Region region, Dictionary<string, string>? properties = default)
+    public RequestBuilder(string appId, string requestSpecificPart, Region region, Dictionary<string, string> properties = default)
     {
         AppId = appId; 
         RequestSpecialPart = requestSpecificPart;

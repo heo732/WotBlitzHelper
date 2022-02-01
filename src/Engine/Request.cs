@@ -2,7 +2,7 @@
 
 namespace Engine;
 
-public class Request
+internal class Request
 {
     public string Uri { get; private set; }
 

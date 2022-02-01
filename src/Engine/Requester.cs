@@ -23,7 +23,7 @@ public class Requester
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
-            return data.GetValue("data")?.AsJEnumerable()
+            return data.GetValue("data").AsJEnumerable()
                 .FirstOrDefault(p => p.Value<string>("nickname") == nickname)
                 ?.Value<int>("account_id") ?? -1;
         }
@@ -47,13 +47,11 @@ public class Requester
     public int GetTankIdByName(string tankName)
     {
         if (TankIdToName.Count == 0)
-        {
             LoadTanks();
-        }
+
         if (TankIdToName.ContainsValue(tankName))
-        {
             return TankIdToName.First(i => i.Value == tankName).Key;
-        }
+
         return -1;
     }
 
@@ -75,13 +73,10 @@ public class Requester
 
         if (dataAchievements.Value<string>("status") == "ok")
         {
-            foreach (var item in dataAchievements["data"]?.AsJEnumerable().Values().Values() ?? Enumerable.Empty<JToken>())
+            foreach (var item in dataAchievements["data"].AsJEnumerable().Values().Values())
             {
                 int tankId = item.Value<int>("tank_id");
-                JToken? achievements = item["achievements"];
-
-                if (achievements == null)
-                    continue;
+                JToken achievements = item["achievements"];
 
                 list.Add(new TankMasteryMarks
                 {
@@ -98,7 +93,7 @@ public class Requester
 
         if (dataStats.Value<string>("status") == "ok")
         {
-            foreach (var item in dataStats["data"]?.AsJEnumerable().Values().Values() ?? Enumerable.Empty<JToken>())
+            foreach (var item in dataStats["data"].AsJEnumerable().Values().Values())
             {
                 int tankId = item.Value<int>("tank_id");
                 list.First(l => l.TankId == tankId).NumberOfBattles = item["all"]?.Value<int>("battles") ?? -1;
@@ -116,9 +111,9 @@ public class Requester
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
-            foreach (var item in data["data"]?.AsJEnumerable().Values() ?? Enumerable.Empty<JToken>())
+            foreach (var item in data["data"].AsJEnumerable().Values())
             {
-                TankIdToName.Add(item.Value<int>("tank_id"), item.Value<string>("name") ?? string.Empty);
+                TankIdToName.Add(item.Value<int>("tank_id"), item.Value<string>("name"));
             }
         }
     }
