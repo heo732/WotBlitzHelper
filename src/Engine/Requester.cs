@@ -159,6 +159,7 @@ public class Requester
                 {
                     Id = item.Value<int>("tank_id"),
                     Name = item.Value<string>("name"),
+                    IsPremium = item.Value<bool>("is_premium"),
                     Level = item.Value<int>("tier")
                 });
             }
