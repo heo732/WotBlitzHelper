@@ -5,25 +5,25 @@ namespace Engine;
 
 public class Requester
 {
-    public string AppId { get; set; } = File.ReadAllText(@"..\..\..\..\appId.txt");
-    public Region Region { get; set; } = Region.Ru;
-    private Dictionary<int, string> TankIdToName { get; set; } = new Dictionary<int, string>();
+    public string AppId { get; private set; }
+    public Region Region { get; private set; }
+    private Dictionary<int, string> TankIdToName { get; set; } = new();
+
+    public Requester(string appId, Region region)
+    {
+        AppId = appId;
+        Region = region;
+    }
 
     public int GetAccountIdByNickname(string nickname)
     {
-        string content = new RequestBuilder(AppId, "account/list")
-        {
-            Region = Region,
-            Properties = new Dictionary<string, string>
-            {
-                ["search"] = nickname
-            }
-        }.Build().GetResponseContent();
+        string content = new RequestBuilder(AppId, "account/list", Region, new() { ["search"] = nickname })
+            .Build().GetResponseContent();
 
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
-            return data.GetValue("data").AsJEnumerable()
+            return data.GetValue("data")?.AsJEnumerable()
                 .FirstOrDefault(p => p.Value<string>("nickname") == nickname)
                 ?.Value<int>("account_id") ?? -1;
         }
@@ -63,23 +63,11 @@ public class Requester
 
         int accountId = GetAccountIdByNickname(nickname);
 
-        string contentAchievements = new RequestBuilder(AppId, "tanks/achievements")
-        {
-            Region = Region,
-            Properties = new Dictionary<string, string>
-            {
-                ["account_id"] = accountId.ToString()
-            }
-        }.Build().GetResponseContent();
+        string contentAchievements = new RequestBuilder(AppId, "tanks/achievements", Region, new() { ["account_id"] = accountId.ToString() })
+            .Build().GetResponseContent();
 
-        string contentStats = new RequestBuilder(AppId, "tanks/stats")
-        {
-            Region = Region,
-            Properties = new Dictionary<string, string>
-            {
-                ["account_id"] = accountId.ToString()
-            }
-        }.Build().GetResponseContent();
+        string contentStats = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accountId.ToString() })
+            .Build().GetResponseContent();
 
         var dataAchievements = JObject.Parse(contentAchievements);
         var dataStats = JObject.Parse(contentStats);
@@ -87,10 +75,14 @@ public class Requester
 
         if (dataAchievements.Value<string>("status") == "ok")
         {
-            foreach (var item in dataAchievements["data"].AsJEnumerable().Values().Values())
+            foreach (var item in dataAchievements["data"]?.AsJEnumerable().Values().Values() ?? Enumerable.Empty<JToken>())
             {
                 int tankId = item.Value<int>("tank_id");
-                JToken achievements = item["achievements"];
+                JToken? achievements = item["achievements"];
+
+                if (achievements == null)
+                    continue;
+
                 list.Add(new TankMasteryMarks
                 {
                     TankId = tankId,
@@ -106,29 +98,27 @@ public class Requester
 
         if (dataStats.Value<string>("status") == "ok")
         {
-            foreach (var item in dataStats["data"].AsJEnumerable().Values().Values())
+            foreach (var item in dataStats["data"]?.AsJEnumerable().Values().Values() ?? Enumerable.Empty<JToken>())
             {
                 int tankId = item.Value<int>("tank_id");
-                list.First(l => l.TankId == tankId).NumberOfBattles = item["all"].Value<int>("battles");
+                list.First(l => l.TankId == tankId).NumberOfBattles = item["all"]?.Value<int>("battles") ?? -1;
             }
         }
 
         return list;
     }
 
-    protected void LoadTanks()
+    private void LoadTanks()
     {
-        string content = new RequestBuilder(AppId, "encyclopedia/vehicles")
-        {
-            Region = Region
-        }.Build().GetResponseContent();
+        string content = new RequestBuilder(AppId, "encyclopedia/vehicles", Region)
+            .Build().GetResponseContent();
 
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
-            foreach (var item in data["data"].AsJEnumerable().Values())
+            foreach (var item in data["data"]?.AsJEnumerable().Values() ?? Enumerable.Empty<JToken>())
             {
-                TankIdToName.Add(item.Value<int>("tank_id"), item.Value<string>("name"));
+                TankIdToName.Add(item.Value<int>("tank_id"), item.Value<string>("name") ?? string.Empty);
             }
         }
     }

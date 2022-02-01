@@ -8,7 +8,7 @@ public class Request
 
     public Request(string uri)
     {
-        Uri = uri ?? string.Empty;
+        Uri = uri;
     }
 
     public string GetResponseContent()
