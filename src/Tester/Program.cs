@@ -11,22 +11,18 @@ static string GetAppId()
 static void ShowUnexistingTanks(Requester requester)
 {
     var allTanks = requester.GetAllTanks();
-    var totalNumber = allTanks.Count();
-    var totalCounter = 0;
-    var unexistingCounter = 0;
+    var userTanksIds = requester.GetTanksIdFromUserStats("t3mp0");
+    var unexistingTanks = allTanks.ExceptBy(userTanksIds, t => t.Id);
+
+    Console.WriteLine($"Number of all available tanks in game: {allTanks.Count()}");
+    Console.WriteLine($"Number of unexisting tanks for user: {unexistingTanks.Count()}");
+    Console.WriteLine();
+    Console.WriteLine("Unexisting tanks for user:");
     
-    foreach (var tank in allTanks)
+    foreach (var tank in unexistingTanks)
     {
-        totalCounter++;
-        if (!requester.IsTankExistsOnAccount("t3mp0", tank.Name))
-        {
-            unexistingCounter++;
-            Console.WriteLine($"Tank not exists on account: {tank.Name}   ({tank.Level})");
-            Console.WriteLine($"({totalCounter} of {totalNumber})");
-        }
+        Console.WriteLine($"({tank.Level}) {tank.Name} [{tank.Id}]");
     }
-    
-    Console.WriteLine($"Number of unexisting tanks: {unexistingCounter}");
 }
 
 var appId = GetAppId();

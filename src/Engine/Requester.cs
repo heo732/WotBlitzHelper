@@ -113,7 +113,7 @@ public class Requester
     {
         var accId = GetAccountIdByNickname(nickname);
         var tank = GetTankByName(tankName);
-        var content = new RequestBuilder(AppId, "account/tankstats", Region, new() { ["account_id"] = accId.ToString(), ["tank_id"] = tank.Id.ToString() }).Build(HttpClient).Run();
+        var content = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accId.ToString(), ["tank_id"] = tank.Id.ToString() }).Build(HttpClient).Run();
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
@@ -124,6 +124,21 @@ public class Requester
         }
 
         return false;
+    }
+
+    public IEnumerable<int> GetTanksIdFromUserStats(string nickname)
+    {
+        string content = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = GetAccountIdByNickname(nickname).ToString() })
+            .Build(HttpClient).Run();
+
+        var data = JObject.Parse(content);
+        if (data.Value<string>("status") == "ok")
+        {
+            foreach (var item in data["data"].AsJEnumerable().Values().Values())
+            {
+                yield return item.Value<int>("tank_id");
+            }
+        }
     }
 
     #endregion
