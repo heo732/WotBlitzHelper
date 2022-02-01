@@ -47,7 +47,15 @@ public class Requester
         if (!Tanks.Any())
             LoadTanks();
 
-        return Tanks.FirstOrDefault(t => t.Name == tankName);
+        return Tanks.FirstOrDefault(t => t.Name.Contains(tankName));
+    }
+
+    public IEnumerable<Tank> GetAllTanks()
+    {
+        if (!Tanks.Any())
+            LoadTanks();
+
+        return Tanks;
     }
 
     public List<TankMasteryMarks> GetMasteryMarks(string nickname)
@@ -98,6 +106,9 @@ public class Requester
         return list;
     }
 
+    /// <summary>
+    /// TODO: Improve this method.
+    /// </summary>
     public bool IsTankExistsOnAccount(string nickname, string tankName)
     {
         var accId = GetAccountIdByNickname(nickname);
@@ -108,7 +119,7 @@ public class Requester
         {
             foreach (var item in data["data"].AsJEnumerable().Values())
             {
-                return item["all"].Value<int>("battles") > 1;
+                return item.HasValues;
             }
         }
 
@@ -132,7 +143,8 @@ public class Requester
                 Tanks.Add(new()
                 {
                     Id = item.Value<int>("tank_id"),
-                    Name = item.Value<string>("name")
+                    Name = item.Value<string>("name"),
+                    Level = item.Value<int>("tier")
                 });
             }
         }
