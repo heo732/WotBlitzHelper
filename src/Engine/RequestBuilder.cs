@@ -8,10 +8,10 @@ internal class RequestBuilder
     private Region Region { get; }
     private Dictionary<string, string> Properties { get; }
 
-    public RequestBuilder(string appId, string requestSpecificPart, Region region, Dictionary<string, string> properties = default)
+    public RequestBuilder(string appId, string requestSpecialPart, Region region, Dictionary<string, string> properties = default)
     {
         AppId = appId; 
-        RequestSpecialPart = requestSpecificPart;
+        RequestSpecialPart = requestSpecialPart;
         Region = region;
         Properties = new(properties ?? new());
     }

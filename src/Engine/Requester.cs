@@ -7,7 +7,7 @@ public class Requester
 {
     private string AppId { get; }
     private Region Region { get; }
-    private Dictionary<int, string> TankIdToName { get; } = new();
+    private List<Tank> Tanks { get; } = new();
     private HttpClient HttpClient { get; } = new();
 
     public Requester(string appId, Region region)
@@ -15,6 +15,8 @@ public class Requester
         AppId = appId;
         Region = region;
     }
+
+    #region Public methods
 
     public int GetAccountIdByNickname(string nickname)
     {
@@ -32,28 +34,20 @@ public class Requester
         return -1;
     }
 
-    public string GetTankNameById(int tankId)
+    public Tank GetTankById(int tankId)
     {
-        if (TankIdToName.Count == 0)
-        {
+        if (!Tanks.Any())
             LoadTanks();
-        }
-        if (TankIdToName.ContainsKey(tankId))
-        {
-            return TankIdToName[tankId];
-        }
-        return "";
+
+        return Tanks.FirstOrDefault(t => t.Id == tankId);
     }
 
-    public int GetTankIdByName(string tankName)
+    public Tank GetTankByName(string tankName)
     {
-        if (TankIdToName.Count == 0)
+        if (!Tanks.Any())
             LoadTanks();
 
-        if (TankIdToName.ContainsValue(tankName))
-            return TankIdToName.First(i => i.Value == tankName).Key;
-
-        return -1;
+        return Tanks.FirstOrDefault(t => t.Name == tankName);
     }
 
     public List<TankMasteryMarks> GetMasteryMarks(string nickname)
@@ -82,7 +76,7 @@ public class Requester
                 list.Add(new TankMasteryMarks
                 {
                     TankId = tankId,
-                    TankName = GetTankNameById(tankId),
+                    TankName = GetTankById(tankId)?.Name,
                     NumberOfBattles = -1,
                     NumberOfMasteryMarks = achievements.Value<int>("markOfMastery"),
                     NumberOfMastery1Marks = achievements.Value<int>("markOfMasteryI"),
@@ -104,6 +98,27 @@ public class Requester
         return list;
     }
 
+    public bool IsTankExistsOnAccount(string nickname, string tankName)
+    {
+        var accId = GetAccountIdByNickname(nickname);
+        var tank = GetTankByName(tankName);
+        var content = new RequestBuilder(AppId, "account/tankstats", Region, new() { ["account_id"] = accId.ToString(), ["tank_id"] = tank.Id.ToString() }).Build(HttpClient).Run();
+        var data = JObject.Parse(content);
+        if (data.Value<string>("status") == "ok")
+        {
+            foreach (var item in data["data"].AsJEnumerable().Values())
+            {
+                return item["all"].Value<int>("battles") > 1;
+            }
+        }
+
+        return false;
+    }
+
+    #endregion
+
+    #region Private methods
+
     private void LoadTanks()
     {
         string content = new RequestBuilder(AppId, "encyclopedia/vehicles", Region)
@@ -114,8 +129,14 @@ public class Requester
         {
             foreach (var item in data["data"].AsJEnumerable().Values())
             {
-                TankIdToName.Add(item.Value<int>("tank_id"), item.Value<string>("name"));
+                Tanks.Add(new()
+                {
+                    Id = item.Value<int>("tank_id"),
+                    Name = item.Value<string>("name")
+                });
             }
         }
     }
+
+    #endregion
 }

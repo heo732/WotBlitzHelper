@@ -10,4 +10,4 @@ static string GetAppId()
 
 var appId = GetAppId();
 var requester = new Requester(appId, Region.Ru);
-Console.WriteLine(requester.GetTankIdByName("E 100"));
+Console.WriteLine(requester.IsTankExistsOnAccount("t3mp0", "E 100"));
