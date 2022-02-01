@@ -1,23 +1,18 @@
-﻿using System.Net;
-
-namespace Engine;
+﻿namespace Engine;
 
 internal class Request
 {
-    public string Uri { get; private set; }
+    private string Uri { get; }
+    private HttpClient HttpClient { get; }
 
-    public Request(string uri)
+    public Request(string uri, HttpClient httpClient)
     {
         Uri = uri;
+        HttpClient = httpClient;
     }
 
-    public string GetResponseContent()
+    public string Run()
     {
-        var request = WebRequest.Create(Uri);
-        request.Method = "GET";
-        using var response = request.GetResponse();
-        using var stream = response.GetResponseStream();
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        return HttpClient.GetStringAsync(Uri).GetAwaiter().GetResult();
     }
 }

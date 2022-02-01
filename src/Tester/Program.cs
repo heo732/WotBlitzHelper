@@ -1,7 +1,7 @@
 ﻿using Engine;
 using System.Reflection;
 
-string GetAppId()
+static string GetAppId()
 {
     using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Tester.AppId.txt");
     using var reader = new StreamReader(stream);

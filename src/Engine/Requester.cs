@@ -5,9 +5,10 @@ namespace Engine;
 
 public class Requester
 {
-    public string AppId { get; private set; }
-    public Region Region { get; private set; }
-    private Dictionary<int, string> TankIdToName { get; set; } = new();
+    private string AppId { get; }
+    private Region Region { get; }
+    private Dictionary<int, string> TankIdToName { get; } = new();
+    private HttpClient HttpClient { get; } = new();
 
     public Requester(string appId, Region region)
     {
@@ -18,7 +19,7 @@ public class Requester
     public int GetAccountIdByNickname(string nickname)
     {
         string content = new RequestBuilder(AppId, "account/list", Region, new() { ["search"] = nickname })
-            .Build().GetResponseContent();
+            .Build(HttpClient).Run();
 
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
@@ -62,10 +63,10 @@ public class Requester
         int accountId = GetAccountIdByNickname(nickname);
 
         string contentAchievements = new RequestBuilder(AppId, "tanks/achievements", Region, new() { ["account_id"] = accountId.ToString() })
-            .Build().GetResponseContent();
+            .Build(HttpClient).Run();
 
         string contentStats = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accountId.ToString() })
-            .Build().GetResponseContent();
+            .Build(HttpClient).Run();
 
         var dataAchievements = JObject.Parse(contentAchievements);
         var dataStats = JObject.Parse(contentStats);
@@ -106,7 +107,7 @@ public class Requester
     private void LoadTanks()
     {
         string content = new RequestBuilder(AppId, "encyclopedia/vehicles", Region)
-            .Build().GetResponseContent();
+            .Build(HttpClient).Run();
 
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
