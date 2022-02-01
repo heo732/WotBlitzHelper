@@ -8,10 +8,10 @@ static string GetAppId()
     return reader.ReadToEnd();
 }
 
-static void ShowUnexistingTanks(Requester requester)
+static async Task ShowUnexistingTanksAsync(Requester requester)
 {
-    var allTanks = requester.GetAllTanks().ToList();
-    var userTanksIds = requester.GetTanksIdFromUserStats("t3mp0").ToList();
+    var allTanks = (await requester.GetAllTanksAsync().ConfigureAwait(false)).ToList();
+    var userTanksIds = (await requester.GetTanksIdFromUserStatsAsync("t3mp0").ConfigureAwait(false)).ToList();
     var exceptionalAvailableTankIds = new[] { 21793 }; // Sheridan Rocket.
     var unexistingTanks = allTanks.ExceptBy(userTanksIds, t => t.Id).ExceptBy(exceptionalAvailableTankIds, t => t.Id).ToList();
     var unavailableInGame = userTanksIds.Except(allTanks.Select(t => t.Id)).ToList();
@@ -36,6 +36,6 @@ static void ShowUnexistingTanks(Requester requester)
 var appId = GetAppId();
 var requester = new Requester(appId, Region.Ru);
 
-ShowUnexistingTanks(requester);
+await ShowUnexistingTanksAsync(requester);
 
 Console.Read();

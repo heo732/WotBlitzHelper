@@ -18,10 +18,10 @@ public class Requester
 
     #region Public methods
 
-    public int GetAccountIdByNickname(string nickname)
+    public async Task<int> GetAccountIdByNicknameAsync(string nickname)
     {
-        string content = new RequestBuilder(AppId, "account/list", Region, new() { ["search"] = nickname })
-            .Build(HttpClient).Run();
+        string content = await new RequestBuilder(AppId, "account/list", Region, new() { ["search"] = nickname })
+            .Build(HttpClient).RunAsync().ConfigureAwait(false);
 
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
@@ -34,41 +34,41 @@ public class Requester
         return -1;
     }
 
-    public Tank GetTankById(int tankId)
+    public async Task<Tank> GetTankByIdAsync(int tankId)
     {
         if (!Tanks.Any())
-            LoadTanks();
+            await LoadTanksAsync().ConfigureAwait(false);
 
         return Tanks.FirstOrDefault(t => t.Id == tankId);
     }
 
-    public Tank GetTankByName(string tankName)
+    public async Task<Tank> GetTankByNameAsync(string tankName)
     {
         if (!Tanks.Any())
-            LoadTanks();
+            await LoadTanksAsync().ConfigureAwait(false);
 
         return Tanks.FirstOrDefault(t => t.Name.Contains(tankName));
     }
 
-    public IEnumerable<Tank> GetAllTanks()
+    public async Task<IEnumerable<Tank>> GetAllTanksAsync()
     {
         if (!Tanks.Any())
-            LoadTanks();
+            await LoadTanksAsync().ConfigureAwait(false);
 
         return Tanks;
     }
 
-    public List<TankMasteryMarks> GetMasteryMarks(string nickname)
+    public async Task<List<TankMasteryMarks>> GetMasteryMarksAsync(string nickname)
     {
         var list = new List<TankMasteryMarks>();
 
-        int accountId = GetAccountIdByNickname(nickname);
+        int accountId = await GetAccountIdByNicknameAsync(nickname).ConfigureAwait(false);
 
-        string contentAchievements = new RequestBuilder(AppId, "tanks/achievements", Region, new() { ["account_id"] = accountId.ToString() })
-            .Build(HttpClient).Run();
+        string contentAchievements = await new RequestBuilder(AppId, "tanks/achievements", Region, new() { ["account_id"] = accountId.ToString() })
+            .Build(HttpClient).RunAsync().ConfigureAwait(false);
 
-        string contentStats = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accountId.ToString() })
-            .Build(HttpClient).Run();
+        string contentStats = await new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accountId.ToString() })
+            .Build(HttpClient).RunAsync().ConfigureAwait(false);
 
         var dataAchievements = JObject.Parse(contentAchievements);
         var dataStats = JObject.Parse(contentStats);
@@ -84,7 +84,7 @@ public class Requester
                 list.Add(new TankMasteryMarks
                 {
                     TankId = tankId,
-                    TankName = GetTankById(tankId)?.Name,
+                    TankName = (await GetTankByIdAsync(tankId).ConfigureAwait(false))?.Name,
                     NumberOfBattles = -1,
                     NumberOfMasteryMarks = achievements.Value<int>("markOfMastery"),
                     NumberOfMastery1Marks = achievements.Value<int>("markOfMasteryI"),
@@ -109,11 +109,11 @@ public class Requester
     /// <summary>
     /// TODO: Improve this method.
     /// </summary>
-    public bool IsTankExistsOnAccount(string nickname, string tankName)
+    public async Task<bool> IsTankExistsOnAccount(string nickname, string tankName)
     {
-        var accId = GetAccountIdByNickname(nickname);
-        var tank = GetTankByName(tankName);
-        var content = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accId.ToString(), ["tank_id"] = tank.Id.ToString() }).Build(HttpClient).Run();
+        var accId = await GetAccountIdByNicknameAsync(nickname).ConfigureAwait(false);
+        var tank = await GetTankByNameAsync(tankName).ConfigureAwait(false);
+        var content = await new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = accId.ToString(), ["tank_id"] = tank.Id.ToString() }).Build(HttpClient).RunAsync().ConfigureAwait(false);
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
@@ -126,42 +126,51 @@ public class Requester
         return false;
     }
 
-    public IEnumerable<int> GetTanksIdFromUserStats(string nickname)
+    public async Task<IEnumerable<int>> GetTanksIdFromUserStatsAsync(string nickname)
     {
-        string content = new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = GetAccountIdByNickname(nickname).ToString() })
-            .Build(HttpClient).Run();
+        string content = await new RequestBuilder(AppId, "tanks/stats", Region, new() { ["account_id"] = (await GetAccountIdByNicknameAsync(nickname).ConfigureAwait(false)).ToString() })
+            .Build(HttpClient).RunAsync().ConfigureAwait(false);
 
+        var result = new List<int>();
         var data = JObject.Parse(content);
         if (data.Value<string>("status") == "ok")
         {
             foreach (var item in data["data"].AsJEnumerable().Values().Values())
             {
-                yield return item.Value<int>("tank_id");
+                result.Add(item.Value<int>("tank_id"));
             }
         }
+
+        return result;
     }
 
     #endregion
 
     #region Private methods
 
-    private void LoadTanks()
+    private async Task LoadTanksAsync()
     {
-        string content = new RequestBuilder(AppId, "encyclopedia/vehicles", Region)
-            .Build(HttpClient).Run();
+        string content = await new RequestBuilder(AppId, "encyclopedia/vehicles", Region)
+            .Build(HttpClient).RunAsync().ConfigureAwait(false);
 
-        var data = JObject.Parse(content);
-        if (data.Value<string>("status") == "ok")
+        lock (Tanks)
         {
-            foreach (var item in data["data"].AsJEnumerable().Values())
+            if (Tanks.Any())
+                return;
+
+            var data = JObject.Parse(content);
+            if (data.Value<string>("status") == "ok")
             {
-                Tanks.Add(new()
+                foreach (var item in data["data"].AsJEnumerable().Values())
                 {
-                    Id = item.Value<int>("tank_id"),
-                    Name = item.Value<string>("name"),
-                    IsPremium = item.Value<bool>("is_premium"),
-                    Level = item.Value<int>("tier")
-                });
+                    Tanks.Add(new()
+                    {
+                        Id = item.Value<int>("tank_id"),
+                        Name = item.Value<string>("name"),
+                        IsPremium = item.Value<bool>("is_premium"),
+                        Level = item.Value<int>("tier")
+                    });
+                }
             }
         }
     }

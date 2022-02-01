@@ -11,8 +11,8 @@ internal class Request
         HttpClient = httpClient;
     }
 
-    public string Run()
+    public async Task<string> RunAsync()
     {
-        return HttpClient.GetStringAsync(Uri).GetAwaiter().GetResult();
+        return await HttpClient.GetStringAsync(Uri).ConfigureAwait(false);
     }
 }
